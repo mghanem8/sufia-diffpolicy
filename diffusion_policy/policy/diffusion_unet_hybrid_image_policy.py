@@ -15,6 +15,7 @@ from robomimic.algo import algo_factory
 from robomimic.algo.algo import PolicyAlgo
 import robomimic.utils.obs_utils as ObsUtils
 import robomimic.models.base_nets as rmbn
+from diffusion_policy.model.vision.crop_randomizer import CropRandomizer
 import diffusion_policy.model.vision.crop_randomizer as dmvc
 from diffusion_policy.common.pytorch_util import dict_apply, replace_submodules
 
@@ -27,7 +28,7 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
             n_action_steps, 
             n_obs_steps,
             num_inference_steps=None,
-            obs_as_global_cond=True,
+            obs_as_global_cond=False,
             crop_shape=(76, 76),
             diffusion_step_embed_dim=256,
             down_dims=(256,512,1024),
@@ -116,8 +117,8 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
         if eval_fixed_crop:
             replace_submodules(
                 root_module=obs_encoder,
-                predicate=lambda x: isinstance(x, rmbn.CropRandomizer),
-                func=lambda x: dmvc.CropRandomizer(
+                predicate=lambda x: isinstance(x, CropRandomizer),
+                func=lambda x: CropRandomizer(
                     input_shape=x.input_shape,
                     crop_height=x.crop_height,
                     crop_width=x.crop_width,
@@ -282,12 +283,18 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
         self.normalizer.load_state_dict(normalizer.state_dict())
 
     def compute_loss(self, batch):
+        print("IN THE COMPUTE_LOSS FUNCTION")
+        print(f"Batch keys: {batch.keys()}")
+
         # normalize input
         assert 'valid_mask' not in batch
+        print("Normalizing observations and actions...")
         nobs = self.normalizer.normalize(batch['obs'])
         nactions = self.normalizer['action'].normalize(batch['action'])
         batch_size = nactions.shape[0]
         horizon = nactions.shape[1]
+        print(f"Normalized observations: {batch['obs']}")
+        print(f"Normalized actions: {batch['action']}")
 
         # handle different ways of passing observation
         local_cond = None
@@ -295,57 +302,109 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
         trajectory = nactions
         cond_data = trajectory
         if self.obs_as_global_cond:
+            print("Processing as global condition...")
             # reshape B, T, ... to B*T
             this_nobs = dict_apply(nobs, 
                 lambda x: x[:,:self.n_obs_steps,...].reshape(-1,*x.shape[2:]))
+            
+            for key, value in this_nobs.items():
+                if isinstance(value, torch.Tensor):
+                    print(f"Key: {key}, Value: {value.shape}")
+                    print(f"Key: {key}, Tensor Device: {value.device}")
+                elif isinstance(value, dict):
+                    for k, v in value.items():
+                        print(f"Key: {k}, Value: {v.shape}")
+                        print(f"Key: {key}, Tensor Device: {value.device}")
+            print(f"Reshaped observations for global condition: {this_nobs.keys()}")
+
+            print(f"Observation Encoder Device: {next(self.obs_encoder.parameters()).device}")
+
             nobs_features = self.obs_encoder(this_nobs)
+            print(f"Encoded observations features: {nobs_features}")
             # reshape back to B, Do
             global_cond = nobs_features.reshape(batch_size, -1)
+            # print(f"Global condition shape: {global_cond.shape}")
         else:
+            print("Processing as local condition...")
             # reshape B, T, ... to B*T
             this_nobs = dict_apply(nobs, lambda x: x.reshape(-1, *x.shape[2:]))
+            # print(f"Reshaped observations for local condition: {this_nobs.shape}")
+            for key, value in this_nobs.items():
+                if isinstance(value, torch.Tensor):
+                    print(f"Key1: {key}, Value: {value.shape}")
+                elif isinstance(value, dict):
+                    for k, v in value.items():
+                        print(f"Key2: {k}, Value: {v.shape}")
+            print(self.obs_encoder)
+            print(f"Observation Encoder Device: {next(self.obs_encoder.parameters()).device}")
+
+            # This is where it fails :/
             nobs_features = self.obs_encoder(this_nobs)
+            print(f"Encoded observations features: {nobs_features}")
             # reshape back to B, T, Do
             nobs_features = nobs_features.reshape(batch_size, horizon, -1)
             cond_data = torch.cat([nactions, nobs_features], dim=-1)
+            print(f"Condition data shape: {cond_data}")
             trajectory = cond_data.detach()
 
         # generate impainting mask
+        print("Generating conditioning mask...")
         condition_mask = self.mask_generator(trajectory.shape)
+        print(f"Condition mask shape: {condition_mask}")
 
         # Sample noise that we'll add to the images
+        print("Sampling noise...")
         noise = torch.randn(trajectory.shape, device=trajectory.device)
         bsz = trajectory.shape[0]
+        # print(f"Noise shape: {noise.shape}")
         # Sample a random timestep for each image
+        print("Sampling random timesteps...")
         timesteps = torch.randint(
             0, self.noise_scheduler.config.num_train_timesteps, 
             (bsz,), device=trajectory.device
         ).long()
+        print(f"Timesteps: {timesteps}")
+
         # Add noise to the clean images according to the noise magnitude at each timestep
-        # (this is the forward diffusion process)
+        print("Adding noise to trajectory...")
         noisy_trajectory = self.noise_scheduler.add_noise(
-            trajectory, noise, timesteps)
-        
+            trajectory, noise, timesteps
+        )
+        # print(f"Noisy trajectory shape: {noisy_trajectory.shape}")
+
         # compute loss mask
+        print("Computing loss mask...")
         loss_mask = ~condition_mask
+        # print(f"Loss mask shape: {loss_mask.shape}")
 
         # apply conditioning
+        print("Applying conditioning...")
         noisy_trajectory[condition_mask] = cond_data[condition_mask]
-        
+        # print(f"Noisy trajectory after conditioning: {noisy_trajectory[condition_mask].shape}")
+
         # Predict the noise residual
+        print("Predicting noise residual...")
         pred = self.model(noisy_trajectory, timesteps, 
             local_cond=local_cond, global_cond=global_cond)
+        # print(f"Predicted residual shape: {pred.shape}")
 
         pred_type = self.noise_scheduler.config.prediction_type 
+        print(f"Prediction type: {pred_type}")
         if pred_type == 'epsilon':
             target = noise
         elif pred_type == 'sample':
             target = trajectory
         else:
             raise ValueError(f"Unsupported prediction type {pred_type}")
+        # print(f"Target shape: {target.shape}")
 
         loss = F.mse_loss(pred, target, reduction='none')
+        # print(f"Initial loss shape: {loss.shape}")
         loss = loss * loss_mask.type(loss.dtype)
+        # print(f"Loss after applying mask shape: {loss.shape}")
         loss = reduce(loss, 'b ... -> b (...)', 'mean')
+        # print(f"Reduced loss shape: {loss.shape}")
         loss = loss.mean()
+        print(f"Final loss value: {loss.item()}")
+
         return loss

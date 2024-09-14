@@ -90,7 +90,11 @@ class OrbitImageDataset(BaseImageDataset):
         joint_pos = sample['joint_pos'].astype(np.float32)
         images = {}
         for key in self.image_keys:
-            img = sample[key].squeeze(1) / 255
+            # get shape
+            if "wrist" not in key:
+                img = sample[key].squeeze(1) / 255
+            else:
+                img = sample[key] / 255
             resized_img = np.array([cv2.resize(im, self.resize_image) for im in img])
             images[key] = resized_img
 
@@ -108,4 +112,7 @@ class OrbitImageDataset(BaseImageDataset):
         sample = self.sampler.sample_sequence(idx)
         data = self._sample_to_data(sample)
         torch_data = dict_apply(data, torch.from_numpy)
+        for key in self.image_keys:
+            # From [seq_len, H, W, C] to [seq_len, C, H, W]
+            torch_data['obs'][key] = torch_data['obs'][key].permute(0, 3, 1, 2)
         return torch_data

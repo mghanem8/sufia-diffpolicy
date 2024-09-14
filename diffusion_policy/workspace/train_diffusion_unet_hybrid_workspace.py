@@ -59,31 +59,46 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
         self.epoch = 0
 
     def run(self):
+        print("IN THE RUN FUNCTION")
         cfg = copy.deepcopy(self.cfg)
+        print(f"Configuration deep copied: {cfg}")
 
         # resume training
         if cfg.training.resume:
             lastest_ckpt_path = self.get_checkpoint_path()
+            print(f"Checkpoint path: {lastest_ckpt_path}")
             if lastest_ckpt_path.is_file():
                 print(f"Resuming from checkpoint {lastest_ckpt_path}")
                 self.load_checkpoint(path=lastest_ckpt_path)
+            else:
+                print(f"No checkpoint found at {lastest_ckpt_path}")
 
         # configure dataset
+        print("Configuring dataset...")
         dataset: BaseImageDataset
         dataset = hydra.utils.instantiate(cfg.task.dataset)
+        print(f"Dataset instantiated: {dataset}")
         assert isinstance(dataset, BaseImageDataset)
         train_dataloader = DataLoader(dataset, **cfg.dataloader)
+        print(f"Training DataLoader configured: {train_dataloader}")
         normalizer = dataset.get_normalizer()
+        print(f"Normalizer obtained: {normalizer}")
 
         # configure validation dataset
+        print("Configuring validation dataset...")
         val_dataset = dataset.get_validation_dataset()
         val_dataloader = DataLoader(val_dataset, **cfg.val_dataloader)
+        print(f"Validation DataLoader configured: {val_dataloader}")
 
         self.model.set_normalizer(normalizer)
+        print(f"Model normalizer set: {self.model}")
+
         if cfg.training.use_ema:
             self.ema_model.set_normalizer(normalizer)
+            print(f"EMA model normalizer set: {self.ema_model}")
 
         # configure lr scheduler
+        print("Configuring learning rate scheduler...")
         lr_scheduler = get_scheduler(
             cfg.training.lr_scheduler,
             optimizer=self.optimizer,
@@ -91,17 +106,18 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
             num_training_steps=(
                 len(train_dataloader) * cfg.training.num_epochs) \
                     // cfg.training.gradient_accumulate_every,
-            # pytorch assumes stepping LRScheduler every epoch
-            # however huggingface diffusers steps it every batch
             last_epoch=self.global_step-1
         )
+        print(f"Learning rate scheduler configured: {lr_scheduler}")
 
         # configure ema
         ema: EMAModel = None
         if cfg.training.use_ema:
             ema = hydra.utils.instantiate(
                 cfg.ema,
-                model=self.ema_model)
+                model=self.ema_model
+            )
+            print(f"EMA model instantiated: {ema}")
 
         # # configure env
         # env_runner: BaseImageRunner
@@ -110,36 +126,46 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
         #     output_dir=self.output_dir)
         # assert isinstance(env_runner, BaseImageRunner)
         env_runner = None
+        print(f"Environment runner configured: {env_runner}")
 
         # configure logging
+        print("Configuring logging...")
         wandb_run = wandb.init(
             dir=str(self.output_dir),
             config=OmegaConf.to_container(cfg, resolve=True),
             **cfg.logging
         )
+        print(f"WandB run initialized: {wandb_run}")
         wandb.config.update(
             {
                 "output_dir": self.output_dir,
             }
         )
+        print("WandB config updated with output directory")
 
         # configure checkpoint
+        print("Configuring checkpoint manager...")
         topk_manager = TopKCheckpointManager(
             save_dir=os.path.join(self.output_dir, 'checkpoints'),
             **cfg.checkpoint.topk
         )
+        print(f"Checkpoint manager configured: {topk_manager}")
 
         # device transfer
+        print(f"Transferring model to device: {cfg.training.device}")
         device = torch.device(cfg.training.device)
         self.model.to(device)
         if self.ema_model is not None:
             self.ema_model.to(device)
         optimizer_to(self.optimizer, device)
+        print(f"Model and optimizer transferred to device")
 
         # save batch for sampling
         train_sampling_batch = None
+        print(f"Train sampling batch initialized: {train_sampling_batch}")
 
         if cfg.training.debug:
+            print("Debug mode enabled. Overriding training configuration.")
             cfg.training.num_epochs = 2
             cfg.training.max_train_steps = 3
             cfg.training.max_val_steps = 3
@@ -147,36 +173,53 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
             cfg.training.checkpoint_every = 1
             cfg.training.val_every = 1
             cfg.training.sample_every = 1
+            print(f"Training configuration: {cfg.training}")
 
         # training loop
         log_path = os.path.join(self.output_dir, 'logs.json.txt')
+        print(f"Logging path: {log_path}")
         with JsonLogger(log_path) as json_logger:
             for local_epoch_idx in range(cfg.training.num_epochs):
+                print(f"Starting epoch {local_epoch_idx}")
                 step_log = dict()
                 # ========= train for this epoch ==========
+                print("Starting training for this epoch...")
                 train_losses = list()
                 with tqdm.tqdm(train_dataloader, desc=f"Training epoch {self.epoch}", 
                         leave=False, mininterval=cfg.training.tqdm_interval_sec) as tepoch:
                     for batch_idx, batch in enumerate(tepoch):
+                        print(f"Processing batch {batch_idx}")
                         # device transfer
                         batch = dict_apply(batch, lambda x: x.to(device, non_blocking=True))
                         if train_sampling_batch is None:
                             train_sampling_batch = batch
+                            print(f"Train sampling batch saved for later: {train_sampling_batch.keys()}")
+                        for k, v in batch.items():
+                            if isinstance(v, torch.Tensor):
+                                print(f"Batch key: {k}, shape: {v.shape}")
+                            elif isinstance(v, dict):
+                                print(f"Batch key: {k}, dict keys: {v.keys()}")
+                                for k2, v2 in v.items():
+                                    print(f"Batch key: {k}, sub key: {k2}, shape: {v2.shape}")
+                        print(self.model)
 
                         # compute loss
                         raw_loss = self.model.compute_loss(batch)
                         loss = raw_loss / cfg.training.gradient_accumulate_every
                         loss.backward()
+                        print(f"Batch {batch_idx} loss computed: {raw_loss.item()}")
 
                         # step optimizer
                         if self.global_step % cfg.training.gradient_accumulate_every == 0:
                             self.optimizer.step()
                             self.optimizer.zero_grad()
                             lr_scheduler.step()
-                        
+                            print(f"Optimizer step performed. Global step: {self.global_step}")
+
                         # update ema
                         if cfg.training.use_ema:
                             ema.step(self.model)
+                            print(f"EMA step updated.")
 
                         # logging
                         raw_loss_cpu = raw_loss.item()
@@ -188,28 +231,34 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
                             'epoch': self.epoch,
                             'lr': lr_scheduler.get_last_lr()[0]
                         }
+                        print(f"Step log updated: {step_log}")
 
                         is_last_batch = (batch_idx == (len(train_dataloader)-1))
                         if not is_last_batch:
                             # log of last step is combined with validation and rollout
                             wandb_run.log(step_log, step=self.global_step)
                             json_logger.log(step_log)
+                            print(f"Logged step: {step_log}")
                             self.global_step += 1
 
                         if (cfg.training.max_train_steps is not None) \
                             and batch_idx >= (cfg.training.max_train_steps-1):
+                            print(f"Reached maximum train steps for this epoch.")
                             break
 
                 # at the end of each epoch
                 # replace train_loss with epoch average
                 train_loss = np.mean(train_losses)
                 step_log['train_loss'] = train_loss
+                print(f"Epoch {local_epoch_idx} training loss: {train_loss}")
 
                 # ========= eval for this epoch ==========
+                print(f"Starting evaluation for epoch {local_epoch_idx}...")
                 policy = self.model
                 if cfg.training.use_ema:
                     policy = self.ema_model
                 policy.eval()
+                print(f"Policy set to evaluation mode.")
 
                 # run rollout
                 # if (self.epoch % cfg.training.rollout_every) == 0:
