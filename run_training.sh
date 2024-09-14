@@ -37,11 +37,11 @@ HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybr
     logging.mode=online &
 
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
-    task=liver_needle_handover-30 \
-    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/liver_needle_handover-30" \
+    task=needle_handover-30 \
+    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/needle_handover-30" \
     training.seed=0 \
     training.device="cuda:1" \
-    exp_name=liver_needle_handover-30 \
+    exp_name=needle_handover-30 \
     logging.mode=online &
 
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
@@ -54,11 +54,11 @@ HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybr
 
 # GPU 2
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
-    task=liver_needle_handover-50 \
-    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/liver_needle_handover-50" \
+    task=needle_handover-50 \
+    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/needle_handover-50" \
     training.seed=0 \
     training.device="cuda:2" \
-    exp_name=liver_needle_handover-50 \
+    exp_name=needle_handover-50 \
     logging.mode=online &
 
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
@@ -153,11 +153,11 @@ HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybr
     logging.mode=online &
 
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
-    task=liver_needle_handover-10 \
-    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/liver_needle_handover-10" \
+    task=needle_handover-10 \
+    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/needle_handover-10" \
     training.seed=0 \
     training.device="cuda:5" \
-    exp_name=liver_needle_handover-10 \
+    exp_name=needle_handover-10 \
     logging.mode=online &
 
 # GPU 6
@@ -187,11 +187,11 @@ HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybr
 
 # GPU 7
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
-    task=liver_needle_handover-40 \
-    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/liver_needle_handover-40" \
+    task=needle_handover-40 \
+    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/needle_handover-40" \
     training.seed=0 \
     training.device="cuda:7" \
-    exp_name=liver_needle_handover-40 \
+    exp_name=needle_handover-40 \
     logging.mode=online &
 
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
@@ -203,11 +203,11 @@ HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybr
     logging.mode=online &
 
 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml" \
-    task=liver_needle_handover-20 \
-    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/liver_needle_handover-20" \
+    task=needle_handover-20 \
+    hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/liver_nneedle_handovereedle_handover-20" \
     training.seed=0 \
     training.device="cuda:7" \
-    exp_name=liver_needle_handover-20 \
+    exp_name=needle_handover-20 \
     logging.mode=online &
 
 wait
