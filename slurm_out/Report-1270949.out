@@ -1,0 +1,60 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-12-2024 22:36:13
+Job ID:    1270949
+User ID:   mghanem8
+Account:   gts-agarg35
+Job name:  SlurmPythonExample
+Partition: gpu-rtx6000
+QOS:       embers
+---------------------------------------
+Running the following command:
+python train.py --config-name=train_diffusion_unet_ddim_hybrid_workspace.yaml task=orbit_dual_suture hydra.run.dir=/storage/home/hcoda1/7/mghanem8/codes/quest_v0/experiments/diffpolicy/orbit_dual_suture_50 training.seed=0 training.device=cuda:0 exp_name=orbit_dual_suture_50_single-cam logging.mode=online task.dataset.max_train_episodes=50
+
+============= Initialized Observation Utils with Obs Spec =============
+
+using obs modality: low_dim with keys: ['joint_pos']
+using obs modality: rgb with keys: ['image']
+using obs modality: depth with keys: []
+using obs modality: scan with keys: []
+/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and will be removed in 0.15, please use 'weights' instead.
+  warnings.warn(
+/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+[2024-09-12 22:41:26,760][diffusion_policy.model.diffusion.conditional_unet1d][INFO] - number of parameters: 2.523578e+08
+Diffusion params: 2.523578e+08
+Vision params: 1.145110e+07
+Resuming from checkpoint /storage/home/hcoda1/7/mghanem8/codes/quest_v0/experiments/diffpolicy/orbit_dual_suture_50/checkpoints/latest.ckpt
+Error executing job with overrides: ['task=orbit_dual_suture', 'training.seed=0', 'training.device=cuda:0', 'exp_name=orbit_dual_suture_50_single-cam', 'logging.mode=online', 'task.dataset.max_train_episodes=50']
+Traceback (most recent call last):
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/train.py", line 34, in <module>
+    main()
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/main.py", line 90, in decorated_main
+    _run_hydra(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 389, in _run_hydra
+    _run_app(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 452, in _run_app
+    run_and_report(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 216, in run_and_report
+    raise ex
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 213, in run_and_report
+    return func()
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 453, in <lambda>
+    lambda: hydra.run(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/train.py", line 31, in main
+    workspace.run()
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/diffusion_policy/workspace/train_diffusion_unet_hybrid_workspace.py", line 69, in run
+    self.load_checkpoint(path=lastest_ckpt_path)
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/diffusion_policy/workspace/base_workspace.py", line 97, in load_checkpoint
+    payload = torch.load(path.open('rb'), pickle_module=dill, **kwargs)
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torch/serialization.py", line 705, in load
+    with _open_zipfile_reader(opened_file) as opened_zipfile:
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torch/serialization.py", line 242, in __init__
+    super(_open_zipfile_reader, self).__init__(torch._C.PyTorchFileReader(name_or_buffer))
+RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory
+srun: error: atl1-1-03-006-13-0: task 0: Exited with exit code 1

@@ -1,0 +1,66 @@
+---------------------------------------
+Begin Slurm Prolog: Sep-13-2024 22:58:23
+Job ID:    1283287
+User ID:   mghanem8
+Account:   gts-agarg35
+Job name:  SlurmPythonExample
+Partition: gpu-rtx6000
+QOS:       embers
+---------------------------------------
+
+The following have been reloaded with a version change:
+  1) anaconda3/2022.05 => anaconda3/2022.05.0.1
+
+/usr/local/pace-apps/lmod/lmod/init/bash: line 169: conda: command not found
+Running the following command:
+python train.py --config-name=train_diffusion_unet_ddim_hybrid_workspace.yaml task=orbit_needle_multi hydra.run.dir=/storage/home/hcoda1/7/mghanem8/codes/quest_v0/experiments/diffpolicy/orbit_needle_multi_50 training.seed=0 training.device=cuda:0 exp_name=orbit_needle_multi_50_multi-cam logging.mode=online task.dataset.max_train_episodes=50
+
+============= Initialized Observation Utils with Obs Spec =============
+
+using obs modality: low_dim with keys: ['joint_pos']
+using obs modality: rgb with keys: ['image', 'wrist_image']
+using obs modality: depth with keys: []
+using obs modality: scan with keys: []
+/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and will be removed in 0.15, please use 'weights' instead.
+  warnings.warn(
+/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and will be removed in 0.15. The current behavior is equivalent to passing `weights=None`.
+  warnings.warn(msg)
+[2024-09-13 23:00:48,287][diffusion_policy.model.diffusion.conditional_unet1d][INFO] - number of parameters: 2.555439e+08
+Diffusion params: 2.555439e+08
+Vision params: 2.290221e+07
+Error executing job with overrides: ['task=orbit_needle_multi', 'training.seed=0', 'training.device=cuda:0', 'exp_name=orbit_needle_multi_50_multi-cam', 'logging.mode=online', 'task.dataset.max_train_episodes=50']
+Traceback (most recent call last):
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/train.py", line 34, in <module>
+    main()
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/main.py", line 90, in decorated_main
+    _run_hydra(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 389, in _run_hydra
+    _run_app(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 452, in _run_app
+    run_and_report(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 216, in run_and_report
+    raise ex
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 213, in run_and_report
+    return func()
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/utils.py", line 453, in <lambda>
+    lambda: hydra.run(
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/train.py", line 31, in main
+    workspace.run()
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/diffusion_policy/workspace/train_diffusion_unet_hybrid_workspace.py", line 76, in run
+    normalizer = dataset.get_normalizer()
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/diffusion_policy/dataset/orbit_dataset.py", line 80, in get_normalizer
+    normalizer.fit(data=data, last_n_dims=1, mode=mode, **kwargs)
+  File "/storage/home/hcoda1/7/mghanem8/.conda/envs/robodiff/lib/python3.9/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/diffusion_policy/model/common/normalizer.py", line 27, in fit
+    self.params_dict[key] =  _fit(value,
+  File "/storage/home/hcoda1/7/mghanem8/codes/diffusion_policy/diffusion_policy/model/common/normalizer.py", line 200, in _fit
+    data = data.type(dtype)
+AttributeError: 'dict' object has no attribute 'type'
+srun: error: atl1-1-03-003-21-0: task 0: Exited with exit code 1

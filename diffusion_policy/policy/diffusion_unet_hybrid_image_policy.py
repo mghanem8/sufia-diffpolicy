@@ -79,13 +79,13 @@ class DiffusionUnetHybridImagePolicy(BaseImagePolicy):
                 for key, modality in config.observation.encoder.items():
                     if modality.obs_randomizer_class == 'CropRandomizer':
                         modality['obs_randomizer_class'] = None
-            else:
-                # set random crop parameter
-                ch, cw = crop_shape
-                for key, modality in config.observation.encoder.items():
-                    if modality.obs_randomizer_class == 'CropRandomizer':
-                        modality.obs_randomizer_kwargs.crop_height = ch
-                        modality.obs_randomizer_kwargs.crop_width = cw
+            # else:
+            #     # set random crop parameter
+            #     ch, cw = crop_shape
+            #     for key, modality in config.observation.encoder.items():
+            #         if modality.obs_randomizer_class == 'CropRandomizer':
+            #             modality.obs_randomizer_kwargs.crop_height = ch
+            #             modality.obs_randomizer_kwargs.crop_width = cw
 
         # init global state
         ObsUtils.initialize_obs_utils_with_config(config)
