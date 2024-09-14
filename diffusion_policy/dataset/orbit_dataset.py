@@ -90,7 +90,9 @@ class OrbitImageDataset(BaseImageDataset):
         joint_pos = sample['joint_pos'].astype(np.float32)
         images = {}
         for key in self.image_keys:
-            img = sample[key].squeeze(1) / 255
+            img = sample[key]/255
+            if len(img.shape) == 5:
+                img = sample[key].squeeze(1)
             resized_img = np.array([cv2.resize(im, self.resize_image) for im in img])
             images[key] = resized_img
 
