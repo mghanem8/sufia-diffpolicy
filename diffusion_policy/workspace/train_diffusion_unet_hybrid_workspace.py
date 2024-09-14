@@ -112,7 +112,8 @@ class TrainDiffusionUnetHybridWorkspace(BaseWorkspace):
         env_runner = None
 
         cfg.logging.project = "Diffusion-RGB-Training"
-        cfg.logging.id = str(self.output_dir).split('/')[-1]
+        cfg.logging.id = str(self.output_dir).split('/')[-1] + "-new"
+        cfg.logging.name = cfg.logging.name + "-new"
 
         # configure logging
         wandb_run = wandb.init(
