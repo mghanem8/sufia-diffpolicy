@@ -23,7 +23,7 @@ env_runner:
 
 dataset:
   _target_: diffusion_policy.dataset.orbit_dataset.OrbitImageDataset
-  zarr_path: /ACT_Training/lift_tissue/2024-09-10-lift-tissue.zarr
+  zarr_path: /ACT_Training/lift_tissue/new-2024-09-10_lift_tissue.zarr
   horizon: ${horizon}
   pad_before: ${eval:'${n_obs_steps}-1'}
   pad_after: ${eval:'${n_action_steps}-1'}
