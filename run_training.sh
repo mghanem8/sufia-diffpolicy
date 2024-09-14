@@ -1,0 +1,2 @@
+# tasks=("orbit_transfer_block" "orbit_dual_suture" "orbit_handover_needle" "orbit_needle" "orbit_tissue")
+CUDA_VISIBLE_DEVICES=0 HYDRA_FULL_ERROR=1 python train.py --config-name="train_diffusion_unet_ddim_hybrid_workspace.yaml"     task=orbit_needle_multi     hydra.run.dir="/lustre/fsw/portfolios/healthcareeng/users/nigeln/diffusion-rgb-multi-cam/"     training.seed=0     training.device="cuda:0"     exp_name=orbit_needle_multi_50_multi-cam     logging.mode=online     task.dataset.max_train_episodes=50

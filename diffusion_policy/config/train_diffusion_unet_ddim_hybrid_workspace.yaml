@@ -16,7 +16,7 @@ n_latency_steps: 0
 dataset_obs_steps: ${n_obs_steps}
 past_action_visible: False
 keypoint_visible_rate: 1.0
-obs_as_global_cond: False
+obs_as_global_cond: True
 
 policy:
   _target_: diffusion_policy.policy.diffusion_unet_hybrid_image_policy.DiffusionUnetHybridImagePolicy
@@ -63,14 +63,14 @@ ema:
   max_value: 0.9999
 
 dataloader:
-  batch_size: 2
+  batch_size: 16
   num_workers: 6
   shuffle: True
   pin_memory: True
   persistent_workers: False
 
 val_dataloader:
-  batch_size: 2
+  batch_size: 16
   num_workers: 6
   shuffle: False
   pin_memory: True
@@ -128,7 +128,7 @@ checkpoint:
 
 multi_run:
   run_dir: data/outputs/${now:%Y.%m.%d}/${now:%H.%M.%S}_${name}_${task_name}
-  wandb_name_base: ${now:%Y.%m.%d-%H.%M.%S}_${name}_${task_name}
+  wandb_name_base: ${name}_${task_name}
 
 hydra:
   job:
