@@ -1,4 +1,4 @@
-name: orbit_needlelift
+name: suture_pad-30
 
 shape_meta: &shape_meta
   obs:
@@ -26,11 +26,10 @@ env_runner:
 
 dataset:
   _target_: diffusion_policy.dataset.orbit_dataset.OrbitImageDataset
-  zarr_path: /ACT_Training/liver_needle_handover/2024-09-05-liver_handover.zarr
-  horizon: ${horizon}
+  zarr_path: /ACT_Training/suture_pad/2024-09-06-suture_pad.zarr
   pad_before: ${eval:'${n_obs_steps}-1'}
   pad_after: ${eval:'${n_action_steps}-1'}
   shape_meta: *shape_meta
   seed: 42
   val_ratio: 0.02
-  max_train_episodes: 50
+  max_train_episodes: 30

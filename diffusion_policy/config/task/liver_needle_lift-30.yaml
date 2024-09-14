@@ -1,0 +1,33 @@
+name: liver_needle_lift-30
+
+shape_meta: &shape_meta
+  obs:
+    image:
+      shape: [84, 84, 3]
+      type: rgb
+    wrist_image:
+      shape: [84, 84, 3]
+      type: rgb
+    joint_pos:
+      shape: [8]
+      type: low_dim
+  action:
+    shape: [7]
+
+env_runner:
+  _target_: diffusion_policy.env_runner.orbit_runner.OrbitRunner
+  n_train: 20
+  max_steps: 300
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${n_action_steps}
+
+dataset:
+  _target_: diffusion_policy.dataset.orbit_dataset.OrbitImageDataset
+  zarr_path: /ACT_Training/liver_needle_lift/2024-09-05-liver-lift-needle.zarr
+  horizon: ${horizon}
+  pad_before: ${eval:'${n_obs_steps}-1'}
+  pad_after: ${eval:'${n_action_steps}-1'}
+  shape_meta: *shape_meta
+  seed: 42
+  val_ratio: 0.02
+  max_train_episodes: 30
